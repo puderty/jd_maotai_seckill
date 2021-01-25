@@ -46,13 +46,22 @@ class Timer(object):
         :return:
         """
         return self.local_time() - self.jd_time()
+        
+    def check(self):
+    		if self.local_time() - self.diff_time - 1000*2*60 >= self.buy_time_ms:
+        		logger.info('抢购时间已过，退出url循环……')
+        		return -1
+    	
 
     def start(self):
         logger.info('正在等待到达设定时间:{}，检测本地时间与京东服务器时间误差为【{}】毫秒'.format(self.buy_time, self.diff_time))
         while True:
             # 本地时间减去与京东的时间差，能够将时间误差提升到0.1秒附近
             # 具体精度依赖获取京东服务器时间的网络时间损耗
-            if self.local_time() - self.diff_time >= self.buy_time_ms:
+            if self.local_time() - self.diff_time - 1000*2*60 >= self.buy_time_ms:
+                logger.info('抢购时间已过，退出……')
+                return -1
+            elif self.local_time() - self.diff_time >= self.buy_time_ms:
                 logger.info('时间到达，开始执行……')
                 break
             else:

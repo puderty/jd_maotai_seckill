@@ -352,10 +352,17 @@ class JdSeckill(object):
         """
         while True:
             try:
-                self.request_seckill_url()
+                result = self.request_seckill_url()
+                if result == -1:
+                		return
                 while True:
                     self.request_seckill_checkout_page()
-                    self.submit_seckill_order()
+                    orderresult = self.submit_seckill_order()
+                    if orderresult == True:
+                    		return 1
+                    if self.timers.check() == -1:
+                		    logger.info("退出循环")
+                		    return -1
             except Exception as e:
                 logger.info('抢购发生异常，稍后继续执行！', e)
             wait_some_time()
@@ -454,14 +461,24 @@ class JdSeckill(object):
                 return seckill_url
             else:
                 logger.info("抢购链接获取失败，稍后自动重试")
+                if self.timers.check() == -1:
+                		logger.info("退出循环")
+                		return -1
                 wait_some_time()
+
 
     def request_seckill_url(self):
         """访问商品的抢购链接（用于设置cookie等"""
         logger.info('用户:{}'.format(self.get_username()))
         logger.info('商品名称:{}'.format(self.get_sku_title()))
-        self.timers.start()
-        self.seckill_url[self.sku_id] = self.get_seckill_url()
+        result = self.timers.start()
+        if result == -1:
+        		logger.info('退出抢购')
+        		return -1
+        urlresult = self.get_seckill_url()
+        if urlresult == -1:
+        		return -1
+        self.seckill_url[self.sku_id] = urlresult
         logger.info('访问商品的抢购连接...')
         headers = {
             'User-Agent': self.user_agent,
